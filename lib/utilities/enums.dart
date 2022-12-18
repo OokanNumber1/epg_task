@@ -1,0 +1,1 @@
+enum FetchType {today, thisMonth, anyday}
