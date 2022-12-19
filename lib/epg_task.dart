@@ -16,7 +16,7 @@ import 'utilities/response_helper.dart';
 void displayConsoleMenu() async {
   // this is to reduce number of times the file
   // will be interacted with (Performance).
-  List<ProgramModel> decemberPrograms =
+  List<ProgramModel> listOfParsedPrograms =
       await convertXlsxToDartList("../lib/file/decEPG.xlsx");
   print("""
 =====Kindly enter number of selected option below ;======
@@ -24,30 +24,34 @@ void displayConsoleMenu() async {
 2. Fetch program of any time of any day (of this month).
 3. Fetch program of any time of any day (of any month).
 4. Fetch all programs in a particular day.
-5. Fetch programs within a given time range in a day.
-6. Fetch program based on logline and theme.
-7. Exit program.""");
+5. Fetch all programs in the current month.
+6. Fetch programs within a given time range in a day.
+7. Fetch program based on logline and theme.
+8. Exit program.""");
   final selectedMenuOption = stdin.readLineSync();
   switch (selectedMenuOption) {
     case "1":
-      fetchProgram(FetchType.today, decemberPrograms);
+      fetchProgram(FetchType.today, listOfParsedPrograms);
       break;
     case "2":
-      fetchProgram(FetchType.thisMonth, decemberPrograms);
+      fetchProgram(FetchType.thisMonth, listOfParsedPrograms);
       break;
     case "3":
-      fetchProgram(FetchType.anyday, decemberPrograms);
+      fetchProgram(FetchType.anyday, listOfParsedPrograms);
       break;
     case "4":
-      fetchAllProgramsOfADay(decemberPrograms);
+      fetchAllProgramsOfADay(listOfParsedPrograms);
       break;
     case "5":
-      fetchProgramsWithinATimeRange(decemberPrograms);
+      fetchAllProgramsOfTheCurrentMonth(listOfParsedPrograms);
       break;
     case "6":
-      fetchProgramWithLoglineAndTheme(decemberPrograms);
+      fetchProgramsWithinATimeRange(listOfParsedPrograms);
       break;
     case "7":
+      fetchProgramWithLoglineAndTheme(listOfParsedPrograms);
+      break;
+    case "8":
       print("Thanks for using the program, Bye!");
       return;
     default:
@@ -56,7 +60,7 @@ void displayConsoleMenu() async {
   }
 }
 
-void fetchProgram(FetchType type, List<ProgramModel> decemberPrograms) async {
+void fetchProgram(FetchType type, List<ProgramModel> parsedPrograms) async {
   final now = DateTime.now();
   if (type == FetchType.today) {
     final programDate =
@@ -64,18 +68,19 @@ void fetchProgram(FetchType type, List<ProgramModel> decemberPrograms) async {
     print("Enter the time of the program in 24hour format (20:00 or 06:00);");
     final time = stdin.readLineSync();
 
-    final response = decemberPrograms
+    final response = parsedPrograms
         .where((program) =>
             program.date == programDate && program.startTime == time)
         .toList();
     responseHelper(response, true);
   } else if (type == FetchType.thisMonth) {
-    print("Enter day of the program you want to fetch below in this format{02 or 12};");
+    print(
+        "Enter day of the program you want to fetch below in this format{02 or 12};");
     final queryDay = stdin.readLineSync();
     print("Enter the time of the program in 24hour format (20:00 or 06:00);");
     final queryTime = stdin.readLineSync();
     final programDate = now.year.toString() + now.month.toString() + queryDay!;
-    final response = decemberPrograms
+    final response = parsedPrograms
         .where((program) =>
             program.date == programDate && program.startTime == queryTime)
         .toList();
@@ -86,7 +91,7 @@ void fetchProgram(FetchType type, List<ProgramModel> decemberPrograms) async {
     final queryDate = stdin.readLineSync();
     print("Enter the time of the program in 24hour format (20:00 or 06:00);");
     final queryTime = stdin.readLineSync();
-    final response = decemberPrograms
+    final response = parsedPrograms
         .where((program) =>
             program.date == queryDate && program.startTime == queryTime)
         .toList();
@@ -94,17 +99,27 @@ void fetchProgram(FetchType type, List<ProgramModel> decemberPrograms) async {
   }
 }
 
-void fetchAllProgramsOfADay(List<ProgramModel> decemberPrograms) async {
+void fetchAllProgramsOfADay(List<ProgramModel> parsedPrograms) async {
   print(
       "Enter date you want to fetch all programs from below in this format {YearMonthDay => 20220409};");
   final queryDate = stdin.readLineSync();
   final response =
-      decemberPrograms.where((program) => program.date == queryDate).toList();
+      parsedPrograms.where((program) => program.date == queryDate).toList();
 
   responseHelper(response, false);
 }
 
-void fetchProgramsWithinATimeRange(List<ProgramModel> decemberPrograms) async {
+void fetchAllProgramsOfTheCurrentMonth(List<ProgramModel> parsedPrograms) {
+  final now = DateTime.now();
+  final currentMonth = now.year.toString() + now.month.toString();
+  final response = parsedPrograms
+      .where((program) => program.date.contains(currentMonth))
+      .toList();
+
+  responseHelper(response, false);
+}
+
+void fetchProgramsWithinATimeRange(List<ProgramModel> parsedPrograms) async {
   List<ProgramModel> response = [];
   print(
       "Enter date of the program you want to fetch below in this format {YearMonthDay => 20220409};");
@@ -115,7 +130,7 @@ void fetchProgramsWithinATimeRange(List<ProgramModel> decemberPrograms) async {
   final upperQueryTime = stdin.readLineSync();
 
   final queryDateResponse =
-      decemberPrograms.where((program) => program.date == queryDate).toList();
+      parsedPrograms.where((program) => program.date == queryDate).toList();
   int indexOfLowerQueryTime = queryDateResponse
       .indexWhere((program) => program.startTime == lowerQueryTime);
   final indexOfUpperQueryTime = queryDateResponse
@@ -128,7 +143,7 @@ void fetchProgramsWithinATimeRange(List<ProgramModel> decemberPrograms) async {
 }
 
 void fetchProgramWithLoglineAndTheme(
-    List<ProgramModel> decemberPrograms) async {
+    List<ProgramModel> parsedPrograms) async {
   print("""
 =====Kindly enter number of selected option below ;======
 1. Fetch program with logline.
@@ -138,7 +153,7 @@ void fetchProgramWithLoglineAndTheme(
     print("Enter logline text of the program to be fetched;");
     final loglineQuery = stdin.readLineSync();
 
-    final response = decemberPrograms
+    final response = parsedPrograms
         .where((program) =>
             program.logline.toLowerCase().contains(loglineQuery!.toLowerCase()))
         .toList();
@@ -148,7 +163,7 @@ void fetchProgramWithLoglineAndTheme(
     print("Enter theme text of the program to be fetched;");
     final themeQuery = stdin.readLineSync();
 
-    final response = decemberPrograms
+    final response = parsedPrograms
         .where((program) =>
             program.theme.toLowerCase().contains(themeQuery!.toLowerCase()))
         .toList();
