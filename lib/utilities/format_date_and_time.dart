@@ -24,7 +24,7 @@ class FormatDateAndTime {
         return "${listOfTimeComponents[0]}:00";
       }
     } else {
-      int minute = ((double.tryParse("0.${listOfTimeComponents[1]}") ?? 0.1) * 60).ceil();
+      int minute = ((double.tryParse("0.${listOfTimeComponents[1]}") ?? 0.1) * 60).floor();
       if (minute >= 59) {
         listOfTimeComponents[0] = ((int.tryParse(listOfTimeComponents[0]) ?? 6) + 1).toString();
         minute = 0;
